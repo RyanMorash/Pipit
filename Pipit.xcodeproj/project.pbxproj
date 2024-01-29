@@ -14,6 +14,7 @@
 		FE4DEC8D2B675A2A004F7E2A /* ImageBasedLighting.skybox in Resources */ = {isa = PBXBuildFile; fileRef = FE4DEC8C2B675A2A004F7E2A /* ImageBasedLighting.skybox */; };
 		FE4DEC8F2B675A2F004F7E2A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE4DEC8E2B675A2F004F7E2A /* Assets.xcassets */; };
 		FE4DEC922B675A2F004F7E2A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE4DEC912B675A2F004F7E2A /* Preview Assets.xcassets */; };
+		FE4DEC9A2B676134004F7E2A /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE4DEC992B676134004F7E2A /* PlayerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		FE4DEC8E2B675A2F004F7E2A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FE4DEC912B675A2F004F7E2A /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FE4DEC932B675A2F004F7E2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FE4DEC992B676134004F7E2A /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 			children = (
 				FE4DEC862B675A2A004F7E2A /* PipitApp.swift */,
 				FE4DEC882B675A2A004F7E2A /* ContentView.swift */,
+				FE4DEC992B676134004F7E2A /* PlayerView.swift */,
 				FE4DEC8A2B675A2A004F7E2A /* ImmersiveView.swift */,
 				FE4DEC8C2B675A2A004F7E2A /* ImageBasedLighting.skybox */,
 				FE4DEC8E2B675A2F004F7E2A /* Assets.xcassets */,
@@ -164,6 +167,7 @@
 				FE4DEC892B675A2A004F7E2A /* ContentView.swift in Sources */,
 				FE4DEC872B675A2A004F7E2A /* PipitApp.swift in Sources */,
 				FE4DEC8B2B675A2A004F7E2A /* ImmersiveView.swift in Sources */,
+				FE4DEC9A2B676134004F7E2A /* PlayerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
