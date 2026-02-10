@@ -2,65 +2,90 @@
 //  ContentView.swift
 //  Pipit
 //
-//  Created by Ryan Morash on 12/9/25.
+//  Main content view with sidebar navigation
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @AppStorage("sailsSid") private var sailsSid: String = ""
+    @State private var viewModel: AppViewModel
+    @State private var showSettings = false
+    
+    init() {
+        let sailsSid = UserDefaults.standard.string(forKey: "sailsSid") ?? ""
+        _viewModel = State(initialValue: AppViewModel(sailsSid: sailsSid.isEmpty ? nil : sailsSid))
+    }
+    
     var body: some View {
+        Group {
+            if sailsSid.isEmpty {
+                needsSetupView
+            } else {
+                mainView
+            }
+        }
+        .task {
+            if !sailsSid.isEmpty && viewModel.creators.isEmpty {
+                await viewModel.loadCreators()
+            }
+        }
+        .onChange(of: sailsSid) { oldValue, newValue in
+            // Update view model when cookie changes
+            viewModel = AppViewModel(sailsSid: newValue.isEmpty ? nil : newValue)
+            if !newValue.isEmpty {
+                Task {
+                    await viewModel.loadCreators()
+                }
+            }
+        }
+    }
+    
+    private var mainView: some View {
         NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+            SidebarView(viewModel: viewModel)
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Label("Settings", systemImage: "gear")
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
         } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+            if viewModel.selectedCreator != nil {
+                ContentGridView(viewModel: viewModel)
+            } else {
+                ContentUnavailableView {
+                    Label("Select a Creator", systemImage: "person.crop.rectangle.stack")
+                } description: {
+                    Text("Choose a creator or channel from the sidebar to view content")
+                }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            NavigationStack {
+                SettingsView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") {
+                                showSettings = false
+                            }
+                        }
+                    }
+            }
+        }
+    }
+    
+    private var needsSetupView: some View {
+        NavigationStack {
+            SettingsView()
+                .navigationTitle("Setup Required")
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
