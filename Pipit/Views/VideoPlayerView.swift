@@ -7,10 +7,14 @@
 
 import SwiftUI
 import AVKit
+import AVFoundation
 
 struct VideoPlayerView: View {
     let post: Components.Schemas.BlogPostModelV3
     @State private var player: AVPlayer?
+    #if os(iOS)
+    @State private var playerViewController: AVPlayerViewController?
+    #endif
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var selectedVideoIndex = 0
@@ -66,6 +70,18 @@ struct VideoPlayerView: View {
         }
     }
     
+    #if os(iOS)
+    private func configureAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .moviePlayback)
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to configure audio session: \(error)")
+        }
+    }
+    #endif
+    
     var body: some View {
         VStack(spacing: 0) {
             // Video player
@@ -74,10 +90,13 @@ struct VideoPlayerView: View {
                     errorView(message: errorMessage)
                 } else if let player = player {
                     #if os(iOS)
-                    VideoPlayer(player: player)
+                    CustomVideoPlayer(player: player, playerViewController: $playerViewController)
                         .aspectRatio(16/9, contentMode: .fit)
+                        .onAppear {
+                            configureAudioSession()
+                        }
                     #else
-                    VideoPlayer(player: player)
+                    MacOSVideoPlayerWithControls(player: player)
                         .aspectRatio(16/9, contentMode: .fit)
                         .frame(maxWidth: .infinity)
                     #endif
@@ -525,6 +544,92 @@ struct VideoSelectorButton: View {
         }
     }
 }
+
+// MARK: - macOS Video Player with AVPlayerView
+
+#if os(macOS)
+import AppKit
+
+struct MacOSVideoPlayerWithControls: NSViewRepresentable {
+    let player: AVPlayer
+    
+    func makeNSView(context: Context) -> ContainerView {
+        let container = ContainerView()
+        let playerView = AVPlayerView()
+        playerView.player = player
+        playerView.controlsStyle = .floating
+        playerView.showsFullScreenToggleButton = true
+        playerView.allowsPictureInPicturePlayback = true
+        playerView.showsSharingServiceButton = false
+        
+        playerView.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(playerView)
+        
+        NSLayoutConstraint.activate([
+            playerView.topAnchor.constraint(equalTo: container.topAnchor),
+            playerView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            playerView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            playerView.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+        ])
+        
+        container.playerView = playerView
+        return container
+    }
+    
+    func updateNSView(_ nsView: ContainerView, context: Context) {
+        nsView.playerView?.player = player
+    }
+    
+    class ContainerView: NSView {
+        var playerView: AVPlayerView?
+        
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            wantsLayer = true
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+}
+#endif
+
+// MARK: - Custom Video Player for iOS (with PiP support)
+
+#if os(iOS)
+struct CustomVideoPlayer: UIViewControllerRepresentable {
+    let player: AVPlayer
+    @Binding var playerViewController: AVPlayerViewController?
+    
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        controller.player = player
+        
+        // Enable Picture-in-Picture
+        controller.allowsPictureInPicturePlayback = true
+        controller.canStartPictureInPictureAutomaticallyFromInline = true
+        
+        // Enable fullscreen controls
+        controller.entersFullScreenWhenPlaybackBegins = false
+        controller.exitsFullScreenWhenPlaybackEnds = false
+        
+        // Show playback controls
+        controller.showsPlaybackControls = true
+        
+        // Store reference for later updates
+        DispatchQueue.main.async {
+            self.playerViewController = controller
+        }
+        
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        uiViewController.player = player
+    }
+}
+#endif
 
 // Environment key for FloatplaneAPIService
 private struct FloatplaneAPIKey: EnvironmentKey {
