@@ -42,24 +42,60 @@ struct VideoPlayerView: View {
         videoAttachments.count > 1
     }
     
+    private var thumbnailPlaceholder: some View {
+        Group {
+            if selectedVideoIndex < videoDetails.count {
+                let thumbnail = videoDetails[selectedVideoIndex].thumbnail
+                CachedAsyncImage(url: thumbnail.url(width: 1280, height: 720)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                }
+                .aspectRatio(16/9, contentMode: .fit)
+                .frame(maxWidth: .infinity)
+            } else {
+                // Fallback to simple placeholder
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .aspectRatio(16/9, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Video player
-            if isLoading {
-                ProgressView("Loading video...")
-                    .frame(maxWidth: .infinity)
-                    .aspectRatio(16/9, contentMode: .fit)
-            } else if let errorMessage = errorMessage {
-                errorView(message: errorMessage)
-            } else if let player = player {
-                #if os(iOS)
-                VideoPlayer(player: player)
-                    .aspectRatio(16/9, contentMode: .fit)
-                #else
-                VideoPlayer(player: player)
-                    .aspectRatio(16/9, contentMode: .fit)
-                    .frame(maxWidth: .infinity)
-                #endif
+            ZStack {
+                if let errorMessage = errorMessage {
+                    errorView(message: errorMessage)
+                } else if let player = player {
+                    #if os(iOS)
+                    VideoPlayer(player: player)
+                        .aspectRatio(16/9, contentMode: .fit)
+                    #else
+                    VideoPlayer(player: player)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                    #endif
+                } else {
+                    // Initial loading state - show thumbnail if available
+                    thumbnailPlaceholder
+                }
+                
+                // Loading overlay for video switches
+                if isLoading {
+                    Color.black.opacity(0.5)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(1.5)
+                                .tint(.white)
+                        )
+                }
             }
             
             // Quality selector bar
@@ -321,9 +357,15 @@ struct VideoPlayerView: View {
             return
         }
         
-        // Reset state when loading new video
+        // Show loading overlay (but keep player visible if it exists)
         await MainActor.run {
-            isLoading = true
+            // Only set isLoading to true if we don't have a player yet
+            // This prevents the view from collapsing when switching videos
+            if self.player != nil {
+                self.isLoading = true
+            } else {
+                self.isLoading = true
+            }
             errorMessage = nil
         }
         

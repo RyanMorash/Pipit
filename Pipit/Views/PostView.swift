@@ -9,6 +9,8 @@ import SwiftUI
 
 struct PostDetailView: View {
     let post: Components.Schemas.BlogPostModelV3
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.viewModel) private var viewModel: AppViewModel?
     
     var body: some View {
         ScrollView {
@@ -38,9 +40,21 @@ struct PostDetailView: View {
                     
                     // Metadata
                     HStack {
-                        Label(post.creator.title, systemImage: "person.circle.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        Button {
+                            navigateToCreator()
+                        } label: {
+                            Label(post.creator.title, systemImage: "person.circle.fill")
+                                .font(.subheadline)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
                         
                         Spacer()
                         
@@ -73,5 +87,27 @@ struct PostDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
 #endif
     }
+    
+    private func navigateToCreator() {
+        guard let viewModel else { return }
+        
+        // Find the creator in the viewModel
+        if let creator = viewModel.creators.first(where: { $0.id == post.creator.id }) {
+            viewModel.selectCreator(creator)
+            dismiss()
+        }
+    }
 }
+
+// Environment key for AppViewModel
+private struct ViewModelKey: EnvironmentKey {
+    static let defaultValue: AppViewModel? = nil
+}
+extension EnvironmentValues {
+    var viewModel: AppViewModel? {
+        get { self[ViewModelKey.self] }
+        set { self[ViewModelKey.self] = newValue }
+    }
+}
+
 

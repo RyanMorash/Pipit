@@ -11,6 +11,7 @@ struct ContentView: View {
     @AppStorage("sailsSid") private var sailsSid: String = ""
     @State private var viewModel: AppViewModel
     @State private var showSettings = false
+    @State private var navigationPath = NavigationPath()
     
     init() {
         let sailsSid = UserDefaults.standard.string(forKey: "sailsSid") ?? ""
@@ -54,17 +55,28 @@ struct ContentView: View {
                     }
                 }
         } detail: {
-            if viewModel.selectedCreator != nil {
-                ContentGridView(viewModel: viewModel)
-            } else {
-                ContentUnavailableView {
-                    Label("Select a Creator", systemImage: "person.crop.rectangle.stack")
-                } description: {
-                    Text("Choose a creator or channel from the sidebar to view content")
+            NavigationStack(path: $navigationPath) {
+                if viewModel.selectedCreator != nil {
+                    ContentGridView(viewModel: viewModel)
+                } else {
+                    ContentUnavailableView {
+                        Label("Select a Creator", systemImage: "person.crop.rectangle.stack")
+                    } description: {
+                        Text("Choose a creator or channel from the sidebar to view content")
+                    }
                 }
             }
         }
         .environment(\.floatplaneAPI, viewModel.apiService)
+        .environment(\.viewModel, viewModel)
+        .onChange(of: viewModel.selectedCreator) { oldValue, newValue in
+            // Clear navigation stack when creator changes
+            navigationPath = NavigationPath()
+        }
+        .onChange(of: viewModel.selectedChannel) { oldValue, newValue in
+            // Clear navigation stack when channel changes
+            navigationPath = NavigationPath()
+        }
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()

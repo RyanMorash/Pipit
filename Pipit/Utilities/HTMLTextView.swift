@@ -12,6 +12,7 @@ struct HTMLTextView: View {
     let font: Font
     
     @State private var attributedString: AttributedString?
+    @State private var isLoading = true
     
     init(_ htmlString: String, font: Font = .body) {
         self.htmlString = htmlString
@@ -22,13 +23,29 @@ struct HTMLTextView: View {
         Group {
             if let attributedString {
                 Text(attributedString)
+            } else if isLoading {
+                // Show placeholder with estimated line count to prevent content shift
+                ProgressView()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: estimatedHeight)
             } else {
+                // Fallback to plain text if conversion fails
                 Text(htmlString)
-                    .task {
-                        attributedString = await convertHTMLToAttributedString(htmlString)
-                    }
             }
         }
+        .task {
+            if attributedString == nil {
+                attributedString = await convertHTMLToAttributedString(htmlString)
+                isLoading = false
+            }
+        }
+    }
+    
+    private var estimatedHeight: CGFloat {
+        // Rough estimate: 20 points per 100 characters
+        let characterCount = htmlString.count
+        let estimatedLines = max(1, characterCount / 80)
+        return CGFloat(estimatedLines * 24) // ~24 points per line
     }
     
     private func convertHTMLToAttributedString(_ html: String) async -> AttributedString? {
