@@ -110,12 +110,6 @@ struct PostCardView: View {
                 Text(post.releaseDate, style: .relative)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                
-                if !post.text.isEmpty {
-                    HTMLTextView(post.text, font: .caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
