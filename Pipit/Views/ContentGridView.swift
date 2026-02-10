@@ -96,7 +96,7 @@ struct PostCardView: View {
     let post: Components.Schemas.BlogPostModelV3
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
             // Thumbnail
             thumbnailView
             
@@ -105,14 +105,16 @@ struct PostCardView: View {
                 Text(post.title)
                     .font(.headline)
                     .lineLimit(2)
+                    .multilineTextAlignment(.leading)
                     .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, minHeight: 40, alignment: .topLeading)
                 
                 Text(post.releaseDate, style: .relative)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
 #if os(iOS)
         .background(Color(uiColor: .secondarySystemBackground))
@@ -126,26 +128,19 @@ struct PostCardView: View {
     private var thumbnailView: some View {
         Group {
             if let thumbnail = post.thumbnail {
-                AsyncImage(url: thumbnail.value1.url(width: 800, height: 450)) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure(_):
-                        placeholderThumbnail
-                    case .empty:
-                        placeholderThumbnail
-                    @unknown default:
-                        placeholderThumbnail
-                    }
+                CachedAsyncImage(url: thumbnail.value1.url(width: 800, height: 450)) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(16/9, contentMode: .fill)
+                } placeholder: {
+                    placeholderThumbnail
                 }
             } else {
                 placeholderThumbnail
             }
         }
-        .frame(height: 180)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .frame(maxWidth: .infinity)
+        .aspectRatio(16/9, contentMode: .fit)
         .clipped()
     }
     
