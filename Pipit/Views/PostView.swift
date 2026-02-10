@@ -13,8 +13,11 @@ struct PostDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Thumbnail
-                if let thumbnail = post.thumbnail {
+                // Video player or thumbnail
+                if let videoAttachments = post.videoAttachments, !videoAttachments.isEmpty {
+                    VideoPlayerView(post: post)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else if let thumbnail = post.thumbnail {
                     AsyncImage(url: thumbnail.value1.url(width: 1920, height: 1080)) { image in
                         image
                             .resizable()
@@ -61,8 +64,6 @@ struct PostDetailView: View {
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    
-                    // TODO: Add video player and other attachments
                 }
             }
             .padding()

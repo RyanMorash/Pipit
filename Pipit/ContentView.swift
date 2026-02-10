@@ -64,6 +64,7 @@ struct ContentView: View {
                 }
             }
         }
+        .environment(\.floatplaneAPI, viewModel.apiService)
         .sheet(isPresented: $showSettings) {
             NavigationStack {
                 SettingsView()

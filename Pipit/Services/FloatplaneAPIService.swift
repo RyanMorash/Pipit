@@ -114,6 +114,12 @@ class FloatplaneAPIService {
     
     // MARK: - Video Delivery Methods
     
+    /// Get video content details including title and thumbnail
+    func getVideoContent(videoId: String) async throws -> Components.Schemas.ContentVideoV3Response {
+        let response = try await client.getVideoContent(query: .init(id: videoId))
+        return try response.ok.body.json
+    }
+    
     /// Get video delivery information for streaming/downloading
     func getDeliveryInfo(entityId: String, scenario: Operations.GetDeliveryInfoV3.Input.Query.ScenarioPayload) async throws -> Components.Schemas.CdnDeliveryV3Response {
         let response = try await client.getDeliveryInfoV3(.init(query: .init(

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("sailsSid") private var sailsSid: String = ""
+    @AppStorage("defaultVideoQuality") private var defaultVideoQuality: String = "auto"
     @State private var showingCookieInfo = false
     @State private var cacheSize: String = "Calculating..."
     @State private var showingClearCacheAlert = false
@@ -30,6 +31,21 @@ struct SettingsView: View {
                 Text("Authentication")
             } footer: {
                 Text("Enter your sails.sid cookie from Floatplane to access content.")
+            }
+            
+            Section {
+                Picker("Default Quality", selection: $defaultVideoQuality) {
+                    Text("Auto (Recommended)").tag("auto")
+                    Text("4K").tag("2160p")
+                    Text("1080p").tag("1080p")
+                    Text("720p").tag("720p")
+                    Text("480p").tag("480p")
+                    Text("360p").tag("360p")
+                }
+            } header: {
+                Text("Video Playback")
+            } footer: {
+                Text("Choose the default video quality for playback. Auto adjusts quality based on your network connection. If your preferred quality is unavailable, the next highest quality will be used.")
             }
             
             Section {
